@@ -17,14 +17,14 @@ import me.dslztx.assist.util.StringAssist;
 public class MachineApplicationMap {
 
     String machinePath;
-    String[] moduleDeployMachinePaths;
+    String[] applicationDeployMachinePaths;
 
     List<String> machines = new ArrayList<>();
     Map<String, List<String>> map = new HashMap<>();
 
-    public MachineApplicationMap(String machinePath, String[] moduleDeployMachinePaths) {
+    public MachineApplicationMap(String machinePath, String[] applicationDeployMachinePaths) {
         this.machinePath = machinePath;
-        this.moduleDeployMachinePaths = moduleDeployMachinePaths;
+        this.applicationDeployMachinePaths = applicationDeployMachinePaths;
     }
 
     public static void main(String[] args) {
@@ -61,8 +61,8 @@ public class MachineApplicationMap {
     }
 
     public void join() {
-        for (String moduleDeployMachinePath : moduleDeployMachinePaths) {
-            joinOne(moduleDeployMachinePath);
+        for (String applicationDeployMachinePath : applicationDeployMachinePaths) {
+            joinOne(applicationDeployMachinePath);
         }
     }
 
@@ -72,7 +72,7 @@ public class MachineApplicationMap {
         try {
             in = IOAssist.bufferedReader(file);
 
-            String moduleName = noSuffix(file.getName());
+            String applicationName = noSuffix(file.getName());
 
             String line;
             while ((line = in.readLine()) != null) {
@@ -82,7 +82,7 @@ public class MachineApplicationMap {
                             map.put(machine, new ArrayList<String>());
                         }
 
-                        map.get(machine).add(moduleName);
+                        map.get(machine).add(applicationName);
                     }
                 }
             }
@@ -105,17 +105,19 @@ public class MachineApplicationMap {
         sb.append("The machine path is: ");
         sb.append(machinePath);
         sb.append("\n");
-        sb.append("The module deploy machine paths are: ");
-        sb.append(StringAssist.joinUseSeparator(Arrays.asList(moduleDeployMachinePaths), ','));
+        sb.append("The application deploy machine paths are: ");
+        sb.append(StringAssist.joinUseSeparator(Arrays.asList(applicationDeployMachinePaths), ','));
         sb.append("\n");
         sb.append("\n");
 
+        sb.append("|machine|applications|\n");
+        sb.append("|-|-|");
         for (String machine : machines) {
             sb.append("|");
             sb.append(machine);
             sb.append("|");
-            List<String> modules = map.get(machine);
-            sb.append(StringAssist.joinUseSeparator(modules, ','));
+            List<String> applications = map.get(machine);
+            sb.append(StringAssist.joinUseSeparator(applications, ','));
             sb.append("|");
             sb.append("\n");
         }
