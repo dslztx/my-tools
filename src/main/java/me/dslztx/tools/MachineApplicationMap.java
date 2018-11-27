@@ -28,7 +28,7 @@ public class MachineApplicationMap {
 
     public static void main(String[] args) {
         if (ArrayAssist.isEmpty(args) || args.length < 2) {
-            System.err.println("need two arguments");
+            System.err.println("need at least two arguments");
             System.exit(1);
         }
 
