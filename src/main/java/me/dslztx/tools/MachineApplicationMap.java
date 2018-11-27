@@ -3,6 +3,7 @@ package me.dslztx.tools;
 import java.io.BufferedReader;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -101,6 +102,14 @@ public class MachineApplicationMap {
 
     public void output() {
         StringBuilder sb = new StringBuilder();
+        sb.append("The machine path is: ");
+        sb.append(machinePath);
+        sb.append("\n");
+        sb.append("The module deploy machine paths are: ");
+        sb.append(StringAssist.joinUseSeparator(Arrays.asList(moduleDeployMachinePaths), ','));
+        sb.append("\n");
+        sb.append("\n");
+
         for (String machine : machines) {
             sb.append("|");
             sb.append(machine);
