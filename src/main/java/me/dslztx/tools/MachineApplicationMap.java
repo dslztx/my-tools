@@ -111,7 +111,7 @@ public class MachineApplicationMap {
         sb.append("\n");
 
         sb.append("|machine|applications|\n");
-        sb.append("|-|-|");
+        sb.append("|-|-|\n");
         for (String machine : machines) {
             sb.append("|");
             sb.append(machine);
