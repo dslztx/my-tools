@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 
 import me.dslztx.assist.util.ArrayAssist;
+import me.dslztx.assist.util.CharAssist;
 import me.dslztx.assist.util.CloseableAssist;
 import me.dslztx.assist.util.IOAssist;
 import me.dslztx.assist.util.ObjectAssist;
@@ -77,7 +78,7 @@ public class MachineApplicationMap {
             String line;
             while ((line = in.readLine()) != null) {
                 for (String machine : machines) {
-                    if (line.contains(machine)) {
+                    if (includeMachine(line, machine)) {
                         if (ObjectAssist.isNull(map.get(machine))) {
                             map.put(machine, new ArrayList<String>());
                         }
@@ -93,10 +94,30 @@ public class MachineApplicationMap {
         }
     }
 
+    private boolean includeMachine(String line, String machine) {
+        int pos = line.indexOf(machine);
+        if (pos == -1) {
+            return false;
+        }
+
+        int end = pos + machine.length();
+        if (line.length() == end) {
+            return true;
+        }
+
+        char c = line.charAt(end);
+        if (CharAssist.isDecimalChar(c) || CharAssist.isEnglishChar(c)) {
+            return false;
+        }
+
+        return true;
+    }
+
     private String noSuffix(String name) {
         int pos = name.lastIndexOf(".");
-        if (pos == -1)
+        if (pos == -1) {
             return name;
+        }
         return name.substring(0, pos);
     }
 
