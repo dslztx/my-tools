@@ -13,7 +13,7 @@
 
     <!--version-->
     <log.version>1.7.12</log.version>
-    <junit.version>4.10</junit.version>
+    <junit.version>4.13.1</junit.version>
   </properties>
 
   <dependencies>
