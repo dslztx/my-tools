@@ -1,0 +1,18 @@
+# JN:各级别jira任务量:  JN0,JN1,JN2,JN3 （紧急，高，普通，极低）
+# WH:总工时:  小时数
+# PJN:总优秀任务数
+# TJD0:P0总超时任务天数
+# TJD1:P1总超时任务天数
+# TJD2:P2总超时任天数
+# JFScore:事故/影响分
+
+JN0=0
+JN1=4
+JN2=0
+JN3=0
+WH=0
+PJN=0
+TJD0=0
+TJD1=0
+TJD2=0
+JFScore=0
