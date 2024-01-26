@@ -9,9 +9,9 @@ import java.net.Socket;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
+
 import javax.net.ssl.SSLContext;
-import me.dslztx.assist.util.FileAssist;
-import me.dslztx.assist.util.IOAssist;
+
 import org.apache.http.HttpHost;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -31,164 +31,158 @@ import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import me.dslztx.assist.util.FileAssist;
+import me.dslztx.assist.util.IOAssist;
+
 public class GFWChange {
 
-  private static final Logger logger = LoggerFactory.getLogger(GFWChange.class);
+    private static final Logger logger = LoggerFactory.getLogger(GFWChange.class);
 
-  private static String dir;
+    private static String dir;
 
-  public static void main(String[] args) throws InterruptedException, IOException {
-    dir = args[0];
+    public static void main(String[] args) throws InterruptedException, IOException {
+        dir = args[0];
 
-    List<String> servers = loadServers();
+        List<String> servers = loadServers();
 
-    logger.info("servers list: " + servers);
+        logger.info("servers list: " + servers);
 
-    int cur = 0;
+        int cur = 0;
 
-    while (true) {
-      if (!testConnect()) {
-
-        int used = cur;
         while (true) {
-          cur = (++cur) % servers.size();
-          if (cur == used) {
-            logger.error("all servers are down");
-            System.exit(-1);
-          }
+            if (!testConnect()) {
 
-          if (changeTo(servers.get(cur))) {
-            break;
-          }
+                int used = cur;
+                while (true) {
+                    cur = (++cur) % servers.size();
+                    if (cur == used) {
+                        logger.error("all servers are down");
+                        System.exit(-1);
+                    }
+
+                    if (changeTo(servers.get(cur))) {
+                        break;
+                    }
+                }
+            }
+
+            Thread.sleep(3 * 60 * 1000);
         }
-      }
-
-      Thread.sleep(3 * 60 * 1000);
     }
-  }
 
-  private static List<String> loadServers() throws IOException {
-    BufferedReader reader = IOAssist.bufferedReader(
-        new File(dir + File.separator + "shadowsocksr" + File.separator + "servers.list"));
+    private static List<String> loadServers() throws IOException {
+        BufferedReader reader =
+            IOAssist.bufferedReader(new File(dir + File.separator + "shadowsocksr" + File.separator + "servers.list"));
 
-    List<String> server = new ArrayList<>();
-    String s;
-    while ((s = reader.readLine()) != null) {
-      server.add(s);
+        List<String> server = new ArrayList<>();
+        String s;
+        while ((s = reader.readLine()) != null) {
+            server.add(s);
+        }
+        return server;
     }
-    return server;
-  }
 
-  private static boolean changeTo(String server) {
-    FileAssist
-        .copyClassPathFileToDst("changeAndRestart.sh", "/tmp/changeAndRestart.sh", false);
+    private static boolean changeTo(String server) {
+        FileAssist.copyClassPathFileToDst("changeAndRestart.sh", "/tmp/changeAndRestart.sh", false);
 
-    try {
-      ProcessBuilder processBuilder = new ProcessBuilder("/bin/bash", "/tmp/changeAndRestart.sh",
-          dir,
-          server);
-      Process process = processBuilder.start();
+        try {
+            ProcessBuilder processBuilder = new ProcessBuilder("/bin/bash", "/tmp/changeAndRestart.sh", dir, server);
+            Process process = processBuilder.start();
 
-      //同步化
-      process.waitFor();
+            // 同步化
+            process.waitFor();
 
-      //等待服务成功开启
-      Thread.sleep(10000);
+            // 等待服务成功开启
+            Thread.sleep(10000);
 
-      if (test()) {
-        logger.info("now server is: " + server + ", connect succeed");
-        return true;
-      } else {
-        logger.info("now server is: " + server + ", connect fail");
+            if (test()) {
+                logger.info("now server is: " + server + ", connect succeed");
+                return true;
+            } else {
+                logger.info("now server is: " + server + ", connect fail");
+                return false;
+            }
+        } catch (Exception e) {
+            logger.error("", e);
+            return false;
+        }
+    }
+
+    public static boolean testConnect() {
+        int tryCount = 3;
+        while ((tryCount--) > 0) {
+            if (test()) {
+                return true;
+            }
+        }
         return false;
-      }
-    } catch (Exception e) {
-      logger.error("", e);
-      return false;
-    }
-  }
-
-  public static boolean testConnect() {
-    int tryCount = 3;
-    while ((tryCount--) > 0) {
-      if (test()) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  public static boolean test() {
-    final SSLConnectionSocketFactory sslsf;
-    try {
-      sslsf = new MyConnectionSocketFactory();
-    } catch (NoSuchAlgorithmException e) {
-      throw new RuntimeException(e);
     }
 
-    Registry<ConnectionSocketFactory> reg = RegistryBuilder.<ConnectionSocketFactory>create()
-        .register("http", PlainConnectionSocketFactory.INSTANCE)
-        .register("https", sslsf)
-        .build();
+    public static boolean test() {
+        final SSLConnectionSocketFactory sslsf;
+        try {
+            sslsf = new MyConnectionSocketFactory();
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        }
 
-    PoolingHttpClientConnectionManager cm = new PoolingHttpClientConnectionManager(reg);
+        Registry<ConnectionSocketFactory> reg = RegistryBuilder.<ConnectionSocketFactory>create()
+            .register("http", PlainConnectionSocketFactory.INSTANCE).register("https", sslsf).build();
 
-    int timeout = 3;
-    RequestConfig config = RequestConfig.custom()
-        .setConnectTimeout(timeout * 1000)
-        .setConnectionRequestTimeout(timeout * 1000)
-        .setSocketTimeout(timeout * 1000).build();
+        PoolingHttpClientConnectionManager cm = new PoolingHttpClientConnectionManager(reg);
 
-    CloseableHttpClient httpclient = HttpClients.custom().setSSLSocketFactory(sslsf)
-        .setConnectionManager(cm).setDefaultRequestConfig(config).build();
-    try {
-      InetSocketAddress socksaddr = new InetSocketAddress("127.0.0.1", 8989);
+        int timeout = 3;
+        RequestConfig config = RequestConfig.custom().setConnectTimeout(timeout * 1000)
+            .setConnectionRequestTimeout(timeout * 1000).setSocketTimeout(timeout * 1000).build();
 
-      HttpClientContext context = HttpClientContext.create();
-      context.setAttribute("socks.address", socksaddr);
+        CloseableHttpClient httpclient = HttpClients.custom().setSSLSocketFactory(sslsf).setConnectionManager(cm)
+            .setDefaultRequestConfig(config).build();
+        try {
+            InetSocketAddress socksaddr = new InetSocketAddress("127.0.0.1", 8989);
 
-      HttpHost target = new HttpHost("www.google.com", 443, "https");
-      HttpGet request = new HttpGet("/");
+            HttpClientContext context = HttpClientContext.create();
+            context.setAttribute("socks.address", socksaddr);
 
-      logger
-          .info("Executing request " + request + " to " + target + " via SOCKS proxy " + socksaddr);
+            HttpHost target = new HttpHost("www.google.com", 443, "https");
+            HttpGet request = new HttpGet("/");
 
-      CloseableHttpResponse response = httpclient.execute(target, request, context);
+            logger.info("Executing request " + request + " to " + target + " via SOCKS proxy " + socksaddr);
 
-      logger.info("----------------------------------------");
+            CloseableHttpResponse response = httpclient.execute(target, request, context);
 
-      logger.info("" + response.getStatusLine());
+            logger.info("----------------------------------------");
 
-      EntityUtils.consume(response.getEntity());
+            logger.info("" + response.getStatusLine());
 
-      response.close();
+            EntityUtils.consume(response.getEntity());
 
-      return true;
-    } catch (Throwable e) {
-      logger.error("", e);
-      return false;
-    } finally {
-      try {
-        httpclient.close();
-      } catch (IOException e) {
-        logger.error("", e);
-      }
-    }
-  }
+            response.close();
 
-  static class MyConnectionSocketFactory extends SSLConnectionSocketFactory {
-
-    public MyConnectionSocketFactory() throws NoSuchAlgorithmException {
-      super(SSLContext.getDefault(), NoopHostnameVerifier.INSTANCE);
+            return true;
+        } catch (Throwable e) {
+            logger.error("", e);
+            return false;
+        } finally {
+            try {
+                httpclient.close();
+            } catch (IOException e) {
+                logger.error("", e);
+            }
+        }
     }
 
-    @Override
-    public Socket createSocket(final HttpContext context) throws IOException {
-      InetSocketAddress socksaddr = (InetSocketAddress) context.getAttribute("socks.address");
-      Proxy proxy = new Proxy(Proxy.Type.SOCKS, socksaddr);
-      return new Socket(proxy);
-    }
+    static class MyConnectionSocketFactory extends SSLConnectionSocketFactory {
 
-  }
+        public MyConnectionSocketFactory() throws NoSuchAlgorithmException {
+            super(SSLContext.getDefault(), NoopHostnameVerifier.INSTANCE);
+        }
+
+        @Override
+        public Socket createSocket(final HttpContext context) throws IOException {
+            InetSocketAddress socksaddr = (InetSocketAddress)context.getAttribute("socks.address");
+            Proxy proxy = new Proxy(Proxy.Type.SOCKS, socksaddr);
+            return new Socket(proxy);
+        }
+
+    }
 }
-

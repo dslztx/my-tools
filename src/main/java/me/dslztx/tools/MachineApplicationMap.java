@@ -2,18 +2,9 @@ package me.dslztx.tools;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
-import me.dslztx.assist.util.ArrayAssist;
-import me.dslztx.assist.util.CharAssist;
-import me.dslztx.assist.util.CloseableAssist;
-import me.dslztx.assist.util.IOAssist;
-import me.dslztx.assist.util.ObjectAssist;
-import me.dslztx.assist.util.StringAssist;
+import me.dslztx.assist.util.*;
 
 public class MachineApplicationMap {
 
